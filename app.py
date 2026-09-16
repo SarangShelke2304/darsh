@@ -25,6 +25,10 @@ config = {
     "target_de": 2.5
 }
 
+@app.route('/healthz')
+def healthz():
+    return jsonify({"status": "ok"}), 200
+
 @app.route('/')
 def index():
     '''
