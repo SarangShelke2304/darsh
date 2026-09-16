@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings | InkKey Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0f172a] text-slate-200 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-md w-full bg-[#1e293b] p-8 rounded-2xl border border-slate-700 shadow-2xl">
+        <h1 class="text-xl font-bold mb-6 text-cyan-400 uppercase italic tracking-tighter">Press <span class="text-white">Calibration</span></h1>
+        
+        <form action="/settings" method="POST" class="space-y-6">
+            <div>
+                <label class="text-[10px] uppercase font-bold text-slate-400">Common ΔD / 1% Key Relation</label>
+                <input type="number" step="0.001" name="density_relation" value="{{config.density_relation}}" class="w-full bg-slate-900 p-3 rounded border border-slate-700 outline-none text-cyan-400 font-mono">
+            </div>
+
+            <div class="p-4 bg-black/20 rounded-lg border border-slate-800">
+                <label class="text-[10px] uppercase font-bold text-cyan-500">Uncoated Absorption Factor</label>
+                <p class="text-[9px] text-slate-500 mb-2">1.0 = Same as Coated | 0.7 = Absorbs 30% more ink</p>
+                <input type="number" step="0.01" name="uncoated_factor" value="{{config.uncoated_factor}}" class="w-full bg-slate-900 p-3 rounded border border-slate-700 outline-none text-white font-mono">
+            </div>
+            
+            <div>
+                <label class="text-[10px] uppercase font-bold text-slate-400">Zero Setting Offset (mm)</label>
+                <input type="number" step="0.01" name="zero_setting" value="{{config.zero_setting}}" class="w-full bg-slate-900 p-3 rounded border border-slate-700 outline-none">
+            </div>
+            
+            <div>
+                <label class="text-[10px] uppercase font-bold text-slate-400">Production Target ΔE</label>
+                <input type="number" step="0.1" name="target_de" value="{{config.target_de}}" class="w-full bg-slate-900 p-3 rounded border border-slate-700 outline-none">
+            </div>
+            
+            <button type="submit" class="w-full bg-cyan-600 py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all">Save Configuration</button>
+        </form>
+        
+        <a href="/" class="block text-center mt-6 text-slate-500 text-xs font-bold tracking-widest hover:text-white transition-colors">← RETURN TO CONSOLE</a>
+    </div>
+</body>
+</html>

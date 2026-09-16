@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>InkKey Pro | Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; overflow-x: hidden; }
+        .console-scroll::-webkit-scrollbar { height: 10px; }
+        .console-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
+        .zone-col { min-width: 125px; border-right: 1px solid #1e293b; padding: 12px; text-align: center; }
+        input { background: #020617; border: 1px solid #475569; border-radius: 4px; padding: 4px; width: 100%; text-align: center; color: #22d3ee; font-size: 11px; outline: none; }
+        .bar-container { height: 180px; background: #020617; display: flex; align-items: flex-end; position: relative; border-radius: 6px; overflow: hidden; margin-top: 10px; border: 1px solid #1e293b; }
+        .key-bar { width: 100%; background: #06b6d4; transition: height 0.6s ease, background-color 0.3s ease; height: 0%; border-top: 2px solid rgba(255,255,255,0.4); }
+        .label-cell { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 12px; min-width: 170px; text-align: left; }
+    </style>
+</head>
+<body class="p-4">
+    <header class="flex flex-col gap-4 mb-6">
+        <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-2xl">
+            <h1 class="text-xl font-bold italic uppercase tracking-tighter">INKKEY <span class="text-cyan-400 font-black">PRO</span></h1>
+            
+            <div class="flex gap-3 items-center">
+                <select id="paper" class="bg-slate-800 p-2 rounded text-xs border border-slate-700"><option>Coated</option><option>Uncoated</option></select>
+                <select id="color" onchange="syncColors()" class="bg-slate-800 p-2 rounded text-xs text-cyan-400 font-bold uppercase border border-slate-700">
+                    <option value="Cyan">Cyan</option><option value="Magenta">Magenta</option><option value="Yellow">Yellow</option><option value="Black">Black</option>
+                </select>
+                <button onclick="predict()" class="bg-cyan-600 hover:bg-cyan-500 px-8 py-2 rounded font-black text-xs uppercase transition-all shadow-lg shadow-cyan-900/40 active:scale-95">Predict Profile</button>
+                <a href="/settings" class="p-2 text-xl hover:rotate-90 transition-transform">⚙️</a>
+            </div>
+        </div>
+
+        <div class="bg-[#1e293b] p-3 rounded-xl border border-slate-700 flex gap-6 items-center">
+            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Bulk Population:</span>
+            <div class="flex gap-4 flex-1">
+                <input type="number" id="bulk_de" placeholder="Set All ΔE" step="0.0000000001" class="!h-8">
+                <input type="number" id="bulk_dens" placeholder="Set All Density" step="0.0000000001" class="!h-8">
+                <input type="number" id="bulk_key" placeholder="Set All Key %" step="0.0000000001" class="!h-8">
+            </div>
+            <button onclick="applyAllBulk()" class="bg-cyan-700 hover:bg-cyan-600 px-6 py-2 rounded font-black text-[10px] uppercase shadow-inner text-white transition-colors">Apply All Fields</button>
+        </div>
+    </header>
+
+    <div class="overflow-x-auto console-scroll bg-[#1e293b] rounded-t-xl border-x border-t border-slate-700 shadow-2xl">
+        <table class="w-full">
+            <tr class="bg-slate-900/50 text-[10px] font-bold text-slate-500 uppercase">
+                <th class="label-cell sticky left-0 bg-[#1e293b] z-10 border-r border-slate-700">ZONE</th>
+                <script>for(let i=1; i<=32; i++) document.write(`<th class="zone-col">Z${i}</th>`);</script>
+            </tr>
+            <tr>
+                <td class="label-cell sticky left-0 bg-[#1e293b] border-r border-slate-700">Scan ΔE Before</td>
+                <script>for(let i=1; i<=32; i++) document.write(`<td class="zone-col"><input type="number" step="0.0000000001" class="de-in" data-z="${i}"></td>`);</script>
+            </tr>
+            <tr>
+                <td class="label-cell sticky left-0 bg-[#1e293b] border-r border-slate-700 italic">Initial Density</td>
+                <script>for(let i=1; i<=32; i++) document.write(`<td class="zone-col"><input type="number" step="0.0000000001" class="dens-in" data-z="${i}" value="1.31"></td>`);</script>
+            </tr>
+            <tr>
+                <td class="label-cell sticky left-0 bg-[#1e293b] border-r border-slate-700 italic">Initial Key %</td>
+                <script>for(let i=1; i<=32; i++) document.write(`<td class="zone-col"><input type="number" step="0.0000000001" class="key-in" data-z="${i}" value="43.6"></td>`);</script>
+            </tr>
+            <tr class="bg-black/20">
+                <td class="label-cell sticky left-0 bg-[#1e293b] border-r border-slate-700">AI PREDICTION %</td>
+                <script>for(let i=1; i<=32; i++) document.write(`
+                    <td class="zone-col">
+                        <div class="bar-container">
+                            <div id="bar-${i}" class="key-bar"></div>
+                            <span id="txt-${i}" class="absolute top-2 left-0 w-full text-[10px] font-black text-white text-center">--</span>
+                        </div>
+                    </td>`);</script>
+            </tr>
+            <tr class="bg-cyan-950/20">
+                <td class="label-cell sticky left-0 bg-[#1e293b] border-r border-slate-700 text-cyan-400 font-black">PREDICTED D</td>
+                <script>for(let i=1; i<=32; i++) document.write(`<td class="zone-col font-mono text-[10px] text-cyan-400" id="res-dens-${i}">--</td>`);</script>
+            </tr>
+        </table>
+    </div>
+
+    <div class="bg-slate-900 p-4 rounded-b-xl border border-slate-700 flex justify-center shadow-2xl">
+        <div class="bg-black/40 px-10 py-3 rounded-lg border border-cyan-900/50 flex flex-col items-center">
+            <span class="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] mb-1">Global Average Predicted Density</span>
+            <span id="avg_dens_val" class="text-3xl font-mono font-bold text-cyan-400">0.0000000000</span>
+        </div>
+    </div>
+
+    <script>
+        const colorPalette = {'Cyan':'#06b6d4','Magenta':'#d946ef','Yellow':'#eab308','Black':'#475569'};
+        function syncColors() {
+            const selected = document.getElementById('color').value;
+            document.querySelectorAll('.key-bar').forEach(b => b.style.backgroundColor = colorPalette[selected]);
+            document.getElementById('color').style.color = colorPalette[selected];
+        }
+
+        function applyAllBulk() {
+            const de = document.getElementById('bulk_de').value;
+            const dens = document.getElementById('bulk_dens').value;
+            const key = document.getElementById('bulk_key').value;
+
+            if(de) document.querySelectorAll('.de-in').forEach(i => i.value = parseFloat(de).toFixed(10));
+            if(dens) document.querySelectorAll('.dens-in').forEach(i => i.value = parseFloat(dens).toFixed(10));
+            if(key) document.querySelectorAll('.key-in').forEach(i => i.value = parseFloat(key).toFixed(10));
+        }
+
+        async function predict() {
+            const zones = [];
+            const color = document.getElementById('color').value;
+            const paper = document.getElementById('paper').value;
+
+            document.querySelectorAll('.de-in').forEach(el => {
+                if(el.value) {
+                    const z = el.dataset.z;
+                    zones.push({ 
+                        zone_no: z, de_before: el.value, 
+                        init_dens: document.querySelector(`.dens-in[data-z="${z}"]`).value,
+                        init_key: document.querySelector(`.key-in[data-z="${z}"]`).value, 
+                        color, paper_type: paper 
+                    });
+                }
+            });
+
+            if(!zones.length) return alert("Enter ΔE data!");
+
+            const res = await fetch('/predict_all', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zones }) });
+            const data = await res.json();
+            
+            if(data.status === "success") {
+                document.getElementById('avg_dens_val').innerText = data.avg_density.toFixed(10);
+                data.results.forEach(r => {
+                    document.getElementById(`bar-${r.zone_no}`).style.height = r.predicted_key + "%";
+                    document.getElementById(`txt-${r.zone_no}`).innerText = r.predicted_key.toFixed(4) + "%";
+                    document.getElementById(`res-dens-${r.zone_no}`).innerText = r.predicted_density.toFixed(10);
+                });
+            }
+        }
+        window.onload = syncColors;
+    </script>
+</body>
+</html>
